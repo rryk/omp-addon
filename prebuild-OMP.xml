@@ -25,6 +25,7 @@
       <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="Newtonsoft.Json" path="../bin/"/>
+      <Reference name="Mono.Addins" path="../../../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
       <Reference name="Nini" path="../../../bin/"/>
 

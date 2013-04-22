@@ -3,46 +3,66 @@ using OpenSim.Region.Framework.Interfaces;
 using System.Collections.Generic;
 using OpenSim.Region.Framework.Scenes;
 using Nini.Config;
+using Mono.Addins;
+
+[assembly: Addin("OMP.WebService.RegionModule", "0.1")]
+[assembly: AddinDependency("OpenSim", "0.5")]
 
 namespace OMP.WebSocket
 {
+    [Extension(Path = "/OpenSim/RegionModules", NodeName = "RegionModule", Id = "OMP.WebService.RegionModule")]
     class RegionModule : INonSharedRegionModule
     {
         public string Name { get { return "OMP.WebSocket.RegionModule"; } }
         public Type ReplaceableInterface { get { return null; } }
 
-        private List<Scene> m_Regions = new List<Scene>();
+        private List<Server> m_Servers = new List<Server>();
         private IConfig m_Config;
+
+        public bool Enabled { get; set; }
         
         public void Initialise(IConfigSource source)
         {
             m_Config = source.Configs["OMP.WebSocket.RegionModule"];
-            
-            // Write config to the console
-            if (m_Config != null)
-            {
-                foreach (string key in m_Config.GetKeys())
-                    Console.WriteLine("[OMP.WebSocket.RegionModule] {0} = {1}", key, m_Config.Get(key));
-            }
+            if (m_Config != null && m_Config.Contains("Enabled"))
+                Enabled = m_Config.GetBoolean("Enabled");
+            else
+                Enabled = false;
         }
 
         public void Close()
         {
-            m_Regions.Clear();
+            if (!Enabled)
+                return;
+
+            m_Servers.Clear();
         }
 
         public void AddRegion(Scene scene)
         {
-            m_Regions.Add(scene);
+            if (!Enabled)
+                return;
+
+            m_Servers.Add(new Server(scene));
         }
 
         public void RemoveRegion(Scene scene)
         {
-            m_Regions.Remove(scene);
+            if (!Enabled)
+                return;
+
+            foreach (Server server in m_Servers) {
+                if (server.Scene == scene) {
+                    m_Servers.Remove(server);
+                    return;
+                }
+            }
         }
 
         public void RegionLoaded(Scene scene)
         {
+            if (!Enabled)
+                return;
         }
     }
 }

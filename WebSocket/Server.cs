@@ -37,73 +37,54 @@ using System.Net;
 using System.Reflection;
 using System;
 using OpenMetaverse;
+using OpenSim.Region.Framework.Scenes;
 
 namespace OMP.WebSocket
 {
-    public sealed class Server : IClientNetworkServer
+    public sealed class Server
     {
-        #region IClientNetworkServer implementation
-        public void Initialise(IPAddress listenIP, ref uint port, int proxyPortOffsetParm, 
-                               bool allow_alternate_port, IConfigSource configSource, 
-                               AgentCircuitManager circuitManager)
-        {
-            m_circuitManager = circuitManager;
-//            m_configSource = configSource;
-            m_httpServer = MainServer.Instance;
-            port = MainServer.Instance.Port;
-        }
+        #region Public interface
+        public Scene Scene { get { return m_Scene; } }
 
-        public void NetworkStop()
-        {
-            Stop();
-        }
-
-        public void AddScene(IScene scene)
-        {
-            if (m_scene != null)
-                m_log.Error("AddScene called on OMP.WebSocket.Server that already has a scene.");
-
-            m_scene = scene;
-            m_location = new Location(scene.RegionInfo.RegionHandle);
-        }
-
-        public bool HandlesRegion(Location x)
-        {
-            return x == m_location;
+        // Create an instance of the server for the region represented by |scene|.
+        public Server(Scene scene) {
+            m_Scene = scene;
+            m_CircuitManager = m_Scene.AuthenticateHandler;
+            m_HttpServer = MainServer.Instance;
+//            m_configSource = m_Scene.Config;
         }
 
         public void Start()
         {
-            m_httpServer.AddWebSocketHandler("/region", HandleNewClient);
+            m_HttpServer.AddWebSocketHandler(m_RegionServicePath, HandleNewClient);
         }
 
         public void Stop()
         {
-            m_log.Info("Stop");
+            m_HttpServer.RemoveWebSocketHandler(m_RegionServicePath);
         }
         #endregion
 
         #region Internal methods
         internal void RemoveClient(Client client)
         {
-            m_clients.Remove(client);
-        }
-
-        internal void AddSceneClient(IClientAPI client)
-        {
-            m_scene.AddNewClient(client, PresenceType.User);
+            m_Clients.Remove(client);
         }
         #endregion
 
         #region Private implementation
-        private IScene m_scene = null;
-        private Location m_location = null;
-        private AgentCircuitManager m_circuitManager = null;
+        private Scene m_Scene;
+        private AgentCircuitManager m_CircuitManager;
 //        private IConfigSource m_configSource = null;
-        private BaseHttpServer m_httpServer = null;
-        private static readonly ILog m_log = 
-            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private List<Client> m_clients = new List<Client>();
+        private BaseHttpServer m_HttpServer;
+//        private static readonly ILog m_Log = 
+//            LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private List<Client> m_Clients = new List<Client>();
+
+        // Unique region service path.
+        private string m_RegionServicePath {
+            get { return "/region/" + Scene.RegionInfo.RegionLocX + "x" + Scene.RegionInfo.RegionLocY; }
+        }
 
         private class WSConnectionWrapper : IWebSocketJSONConnection {
             public event ConnectionMessageDelegate OnMessage;
@@ -141,14 +122,14 @@ namespace OMP.WebSocket
             return Array.IndexOf(supportedInterfaces, interfaceURI) != -1;
         }
 
-        void ConnectUseCircuitCode(Connection conn, IPEndPoint remoteEndPoint, uint code, 
-                                   string agentID, string sessionID)
+        private void ConnectUseCircuitCode(Connection conn, uint code, string agentID, 
+                                           string sessionID)
         {
             AuthenticateResponse authResponse =
-            m_circuitManager.AuthenticateSession(new UUID(sessionID), new UUID(agentID), code);
+                m_CircuitManager.AuthenticateSession(new UUID(sessionID), new UUID(agentID), code);
             if (authResponse.Authorised) 
             {
-                m_clients.Add(new Client(this, m_scene, conn, authResponse, code, remoteEndPoint));
+                m_Clients.Add(new Client(conn, this, m_Scene));
             }
         }
         
@@ -160,7 +141,7 @@ namespace OMP.WebSocket
                 (Func<string, bool>)InterfaceImplements);
             conn.RegisterFuncImplementation("omp.connect.useCircuitCode", "...",
                 (Action<UInt32, string, string>)((code, agentID, sessionID) => 
-                  ConnectUseCircuitCode(conn, handler.RemoteIPEndpoint, code, agentID, sessionID)));
+                  ConnectUseCircuitCode(conn, code, agentID, sessionID)));
         }
 
         #endregion
