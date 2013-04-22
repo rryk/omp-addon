@@ -1,4 +1,4 @@
-    <Project frameworkVersion="v3_5" name="OMP.KIARA" path="addon-modules/OMP/KIARA" type="Library">
+    <Project frameworkVersion="v3_5" name="KIARA" path="addon-modules/OMP/KIARA" type="Library">
       <Configuration name="Debug">
         <Options>
           <OutputPath>../../../bin/</OutputPath>
