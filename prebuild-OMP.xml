@@ -1,0 +1,38 @@
+    <Project frameworkVersion="v3_5" name="OMP.WebSocket" path="addon-modules/OMP/WebSocket" type="Library">
+      <Configuration name="Debug">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      <Configuration name="Release">
+        <Options>
+          <OutputPath>../../../bin/</OutputPath>
+        </Options>
+      </Configuration>
+      
+      <!-- Internal dependencies -->
+      <ReferencePath>../../../bin/</ReferencePath>
+      <Reference name="System"/>
+      <Reference name="System.Core"/>
+      <Reference name="KIARA"/>
+      <Reference name="OpenSim.Framework" path="../../../../../bin/"/>
+      <Reference name="OpenSim.Framework.Servers"/>
+      <Reference name="OpenSim.Framework.Servers.HttpServer"/>
+      <Reference name="OpenSim.Region.ClientStack"/>
+      <Reference name="OpenSim.Region.Framework"/>
+      
+      <!-- External dependencies -->
+      <Reference name="OpenMetaverse" path="../../../../../bin/"/>
+      <Reference name="OpenMetaverseTypes" path="../../../../../bin/"/>
+      <Reference name="Newtonsoft.Json" path="../../../../../bin/"/>
+      <Reference name="log4net" path="../../../../../bin/"/>
+      <Reference name="Nini" path="../../../../../bin/"/>
+
+      <Files>
+        <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
+        <Match pattern="*.cs" recurse="true">
+          <Exclude name="Tests" pattern="Tests"/>
+        </Match>
+        <Match buildAction="EmbeddedResource" path="Resources" pattern="*.addin.xml" recurse="true"/>
+      </Files>
+    </Project>
