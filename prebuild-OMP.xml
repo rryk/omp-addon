@@ -22,7 +22,7 @@
       <Reference name="OpenSim.Region.Framework"/>
       
       <!-- External dependencies -->
-      <Reference name="OpenMetaverse" path="../../bin/"/>
+      <Reference name="OpenMetaverse" path="../../../bin/"/>
       <Reference name="OpenMetaverseTypes" path="../../../bin/"/>
       <Reference name="Newtonsoft.Json" path="../bin/"/>
       <Reference name="log4net" path="../../../bin/"/>
